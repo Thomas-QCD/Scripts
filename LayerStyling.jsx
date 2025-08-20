@@ -415,6 +415,7 @@ function addWhiteInkSpot(doc) {
 		var dlg = new Window('dialog', 'Layer Styling Script');
 
 		// Dropdown (popup)
+		dlg.add('statictext', undefined, 'WARNING: Scale cannot be changed');
 		dlg.add('statictext', undefined, 'Select Scale:');
 		var scaleDropdown = dlg.add('dropdownlist', undefined, [
 			'Full scale',
@@ -474,3 +475,4 @@ function addWhiteInkSpot(doc) {
 		total += styleLayerItems(doc, ln, sc);
 	}
 })();
+
