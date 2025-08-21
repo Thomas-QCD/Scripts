@@ -192,7 +192,12 @@ if (ExternalObject.AdobeXMPScript == undefined) {
 
 // ================== YOUR LAYERS & HEX COLORS ==================
 var LAYER_SPECS = [
-	{ name: 'Register', hex: '000000' },
+	{ name: 'Proof - Bleed', hex: '000000' }, // 50% fill
+	{ name: 'Proof - FoldLine', hex: '000000' },
+	{ name: 'Proof - Stich / Sew', hex: '000000' },
+	{ name: 'Proof - Hemming', hex: '000000' },
+	{ name: 'Proof - Panel', hex: '000000' },
+	{ name: 'Proof - SafeZone', hex: '000000' },
 	{ name: 'Draw', hex: 'faa52c' },
 	{ name: 'Score', hex: 'a91d22' },
 	{ name: 'Crease', hex: '19b24b' },
@@ -205,7 +210,28 @@ var LAYER_SPECS = [
 	{ name: 'Bevel-cut', hex: '14572c' },
 	{ name: 'Thru-cut', hex: '3953a4' },
 	{ name: 'Route', hex: '322b70' },
+	{ name: 'Register', hex: '000000' },
 	{ name: 'WHITE', hex: 'c7b2d6' }, // Added for white ink spot
+];
+
+var FRONTLAYERS = [
+	'WHITE',
+	'Register',
+	'Proof - Bleed',
+	'Proof - SafeZone',
+	'Proof - FoldLine',
+	'Proof - Stich / Sew',
+	'Proof - Hemming',
+	'Proof - Panel',
+];
+
+var STROKELAYERS = [
+	'Proof - Bleed',
+	'Proof - SafeZone',
+	'Proof - FoldLine',
+	'Proof - Stich / Sew',
+	'Proof - Hemming',
+	'Proof - Panel',
 ];
 
 // Global stroke width (points)
@@ -249,7 +275,7 @@ function getOrCreateLayer(doc, name) {
 			}
 		}
 
-		if (name === 'WHITE' || name === 'Register') {
+		if (name && valueExists(FRONTLAYERS, name)) {
 			lyr.zOrder(ZOrderMethod.BRINGTOFRONT);
 		} else {
 			lyr.zOrder(ZOrderMethod.SENDTOBACK);
@@ -257,6 +283,16 @@ function getOrCreateLayer(doc, name) {
 	}
 	return lyr;
 }
+
+function valueExists(arr, value) {
+	for (var i = 0; i < arr.length; i++) {
+		if (arr[i] === value) {
+			return true;
+		}
+	}
+	return false;
+}
+
 function getOrCreateSpot(doc, spotName, rgbColor) {
 	// Find by name
 	for (var i = 0; i < doc.spots.length; i++) {
@@ -328,6 +364,14 @@ function styleItemWithSpot(item, spotColor) {
 			if ('stroked' in item) item.stroked = false;
 			item.fillColor = spotColor; // Use the white ink spot color
 			return;
+		} else if (valueExists(STROKELAYERS, item.layer.name)) {
+			// Turn off fill (where supported)
+			if ('filled' in item) item.filled = false;
+			if ('stroked' in item) item.stroked = true;
+			if ('strokeColor' in item) item.strokeColor = spotColor;
+			if ('strokeWidth' in item) item.strokeWidth = 12;
+			if ('strokeDashOffset' in item) item.strokeDashOffset = 12;
+			if ('strokeDashes' in item) item.strokeDashes = [12, 12];
 		} else {
 			// Turn off fill (where supported)
 			if ('filled' in item) item.filled = false;
@@ -336,6 +380,8 @@ function styleItemWithSpot(item, spotColor) {
 			if ('stroked' in item) item.stroked = true;
 			if ('strokeColor' in item) item.strokeColor = spotColor;
 			if ('strokeWidth' in item) item.strokeWidth = SCALE;
+			item.strokeDashOffset = 0;
+			item.strokeDashes = {};
 		}
 	} catch (e) {
 		// ignore unsupported cases
@@ -475,4 +521,3 @@ function addWhiteInkSpot(doc) {
 		total += styleLayerItems(doc, ln, sc);
 	}
 })();
-
