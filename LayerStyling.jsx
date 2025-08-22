@@ -192,12 +192,15 @@ if (ExternalObject.AdobeXMPScript == undefined) {
 
 // ================== YOUR LAYERS & HEX COLORS ==================
 var LAYER_SPECS = [
-	{ name: 'Proof - Bleed', hex: '000000' }, // 50% fill
-	{ name: 'Proof - FoldLine', hex: '000000' },
-	{ name: 'Proof - Stich / Sew', hex: '000000' },
-	{ name: 'Proof - Hemming', hex: '000000' },
-	{ name: 'Proof - Panel', hex: '000000' },
-	{ name: 'Proof - SafeZone', hex: '000000' },
+	{ name: 'Proof - Bleed', hex: 'ed1c24' }, // 50% fill
+	{ name: 'Proof - SafeZone', hex: '22a9e1' },
+	{ name: 'Proof - Crease', hex: '8400c9' },
+	{ name: 'Proof - Stich / Sew', hex: 'fba926' },
+	{ name: 'Proof - Hem/FoldLine', hex: 'e9e95b' },
+	{ name: 'Proof - Trim', hex: '3f403f' },
+	{ name: 'Proof - Panel', hex: '27f21c' },
+	{ name: 'Proof - Notes', hex: '000000' },
+	{ name: 'Trim', hex: '22a9e1' },
 	{ name: 'Draw', hex: 'faa52c' },
 	{ name: 'Score', hex: 'a91d22' },
 	{ name: 'Crease', hex: '19b24b' },
@@ -214,23 +217,27 @@ var LAYER_SPECS = [
 	{ name: 'WHITE', hex: 'c7b2d6' }, // Added for white ink spot
 ];
 
+var boardPreset = ['Proof - Bleed', 'Proof - Trim', 'Proof - SafeZone'];
+
 var FRONTLAYERS = [
 	'WHITE',
 	'Register',
 	'Proof - Bleed',
 	'Proof - SafeZone',
-	'Proof - FoldLine',
+	'Proof - Crease',
 	'Proof - Stich / Sew',
-	'Proof - Hemming',
+	'Proof - Hem/FoldLine',
+	'Proof - Trim',
 	'Proof - Panel',
+	'Proof - Notes',
 ];
 
 var STROKELAYERS = [
 	'Proof - Bleed',
+	'Proof - Crease',
 	'Proof - SafeZone',
-	'Proof - FoldLine',
+	'Proof - Hem/FoldLine',
 	'Proof - Stich / Sew',
-	'Proof - Hemming',
 	'Proof - Panel',
 ];
 
@@ -359,7 +366,10 @@ function styleItemWithSpot(item, spotColor) {
 		}
 
 		// Fill objects in the WHITE layer, no stroke
-		if (item.layer.name === 'WHITE') {
+		if (item.layer.name === 'Proof - Notes') {
+			// Do nothing, leave as is
+			return;
+		} else if (item.layer.name === 'WHITE') {
 			if ('filled' in item) item.filled = true;
 			if ('stroked' in item) item.stroked = false;
 			item.fillColor = spotColor; // Use the white ink spot color
@@ -369,9 +379,9 @@ function styleItemWithSpot(item, spotColor) {
 			if ('filled' in item) item.filled = false;
 			if ('stroked' in item) item.stroked = true;
 			if ('strokeColor' in item) item.strokeColor = spotColor;
-			if ('strokeWidth' in item) item.strokeWidth = 12;
-			if ('strokeDashOffset' in item) item.strokeDashOffset = 12;
-			if ('strokeDashes' in item) item.strokeDashes = [12, 12];
+			if ('strokeWidth' in item) item.strokeWidth = 10;
+			if ('strokeDashOffset' in item) item.strokeDashOffset = 10;
+			if ('strokeDashes' in item) item.strokeDashes = [10, 10];
 		} else {
 			// Turn off fill (where supported)
 			if ('filled' in item) item.filled = false;
