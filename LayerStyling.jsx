@@ -513,7 +513,13 @@ function addWhiteInkSpot(doc) {
 			dlg.close(0);
 		};
 
-		var result = dlg.show();
+		// Make Save the default button (responds to Enter key)
+		dlg.defaultElement = saveBtn;
+
+		// Optional: make Cancel respond to Escape key
+		dlg.cancelElement = cancelBtn;
+
+		dlg.show();
 	} else {
 		SCALE = data.scale || 0.01; // default to full scale if not
 	}
