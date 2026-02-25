@@ -267,6 +267,28 @@ function hexToRGB(hex) {
 	c.blue = n & 255;
 	return c;
 }
+function hexToCMYK(hex) {
+    hex = (hex || '').replace('#', '').toLowerCase();
+    if (hex.length === 3)
+        hex = hex.replace(/./g, function (c) { return c + c; });
+
+    var r = parseInt(hex.substring(0,2), 16) / 255;
+    var g = parseInt(hex.substring(2,4), 16) / 255;
+    var b = parseInt(hex.substring(4,6), 16) / 255;
+
+    var k = 1 - Math.max(r, g, b);
+    var c = (1 - r - k) / (1 - k) || 0;
+    var m = (1 - g - k) / (1 - k) || 0;
+    var y = (1 - b - k) / (1 - k) || 0;
+
+    var color = new CMYKColor();
+    color.cyan    = c * 100;
+    color.magenta = m * 100;
+    color.yellow  = y * 100;
+    color.black   = k * 100;
+
+    return color;
+}
 function getOrCreateLayer(doc, name) {
 	var lyr;
 	try {
@@ -323,16 +345,28 @@ function makeSpotColor(spot, tint) {
 	return sc;
 }
 function ensureLayersAndSpots(doc) {
-	// returns map: layerName -> SpotColor (100%)
-	var m = {};
-	for (var i = 0; i < LAYER_SPECS.length; i++) {
-		var spec = LAYER_SPECS[i];
-		getOrCreateLayer(doc, spec.name);
-		var rgb = hexToRGB(spec.hex);
-		var spot = getOrCreateSpot(doc, spotNameFor(spec.name), rgb);
-		m[spec.name] = makeSpotColor(spot, 100);
-	}
-	return m;
+    // returns map: layerName -> SpotColor (100%)
+    var m = {};
+
+    var useCMYK = (doc.documentColorSpace === DocumentColorSpace.CMYK);
+
+    for (var i = 0; i < LAYER_SPECS.length; i++) {
+        var spec = LAYER_SPECS[i];
+
+        getOrCreateLayer(doc, spec.name);
+
+        var baseColor;
+        if (useCMYK) {
+            baseColor = hexToCMYK(spec.hex);
+        } else {
+            baseColor = hexToRGB(spec.hex);
+        }
+
+        var spot = getOrCreateSpot(doc, spotNameFor(spec.name), baseColor);
+        m[spec.name] = makeSpotColor(spot, 100);
+    }
+
+    return m;
 }
 
 function itemSupportsStroke(item) {
