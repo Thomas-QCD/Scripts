@@ -213,7 +213,7 @@ var LAYER_SPECS = [
 	{ name: 'Bevel-cut', hex: '14572c' },
 	{ name: 'Thru-cut', hex: '3953a4' },
 	{ name: 'Route', hex: '322b70' },
-	{ name: 'Register', hex: '000000' },
+	{ name: 'Register', hex: '000000' }, // fill not stroke
 	{ name: 'WHITE', hex: 'c7b2d6' }, // Added for white ink spot
 ];
 
@@ -322,6 +322,17 @@ function valueExists(arr, value) {
 	return false;
 }
 
+/** Built-in Illustrator registration swatch (prints on all plates). */
+function registrationSwatchColor(doc, fallbackColor) {
+	try {
+		return doc.swatches.getByName('[Registration]').color;
+	} catch (e1) {}
+	try {
+		return new RegistrationColor();
+	} catch (e2) {}
+	return fallbackColor;
+}
+
 function getOrCreateSpot(doc, spotName, rgbColor) {
 	// Find by name
 	for (var i = 0; i < doc.spots.length; i++) {
@@ -381,20 +392,20 @@ function itemSupportsStroke(item) {
 	);
 }
 
-function styleItemWithSpot(item, spotColor) {
+function styleItemWithSpot(item, spotColor, doc) {
 	try {
 		if (!itemSupportsStroke(item)) return;
 
 		// Go inside containers
 		if (item.typename === 'GroupItem') {
 			for (var gi = 0; gi < item.pageItems.length; gi++) {
-				styleItemWithSpot(item.pageItems[gi], spotColor);
+				styleItemWithSpot(item.pageItems[gi], spotColor, doc);
 			}
 			return;
 		}
 		if (item.typename === 'CompoundPathItem') {
 			for (var pi = 0; pi < item.pathItems.length; pi++) {
-				styleItemWithSpot(item.pathItems[pi], spotColor);
+				styleItemWithSpot(item.pathItems[pi], spotColor, doc);
 			}
 			return;
 		}
@@ -407,6 +418,12 @@ function styleItemWithSpot(item, spotColor) {
 			if ('filled' in item) item.filled = true;
 			if ('stroked' in item) item.stroked = false;
 			item.fillColor = spotColor; // Use the white ink spot color
+			return;
+		} else if (item.layer.name === 'Register') {
+			if ('filled' in item) item.filled = true;
+			if ('stroked' in item) item.stroked = false;
+			if ('fillColor' in item)
+				item.fillColor = registrationSwatchColor(doc, spotColor);
 			return;
 		} else if (valueExists(STROKELAYERS, item.layer.name)) {
 			// Turn off fill (where supported)
@@ -444,7 +461,7 @@ function styleLayerItems(doc, layerName, spotColor) {
 	// Process all top-level pageItems on this layer
 	var items = lyr.pageItems;
 	for (var i = 0; i < items.length; i++) {
-		styleItemWithSpot(items[i], spotColor);
+		styleItemWithSpot(items[i], spotColor, doc);
 		count++;
 	}
 	return count;
